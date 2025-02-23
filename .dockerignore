@@ -1,0 +1,30 @@
+# Bỏ thư mục build và output
+target/
+grpc/
+build/
+
+# Bỏ các tệp cấu hình môi trường cục bộ
+*.env
+*.log
+
+# Bỏ các tệp của Git
+.git
+.gitignore
+
+# Bỏ các IDE/Editor files
+.idea/
+.vscode/
+*.iml
+
+# Bỏ dependency cache của Maven hoặc Gradle (nếu có)
+.mvn/
+.gradle/
+**/node_modules/
+**/package-lock.json
+**/yarn.lock
+
+# Bỏ tệp tạm thời của hệ thống
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

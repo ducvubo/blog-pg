@@ -1,0 +1,56 @@
+server:
+  port: 12000
+  servlet:
+    context-path: /api/v1
+
+  tomcat:
+    threads:
+      min-spare: 10
+      max: 200
+
+spring:
+  application:
+    name: blog
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+  datasource:
+    url: jdbc:oracle:thin:@//160.191.51.57:1521/ORCLPDB1
+    username: BlogPG
+    password: Duc17052003*
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      auto-commit: true
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+#  elasticsearch:
+#    uris: https://160.191.245.32:9200
+#    username: elastic
+#    password: H-rPa*H42fjDNi9uiNNr
+#    ssl:
+#      verification-mode: none
+#
+#  kafka:
+#    bootstrap-servers: 160.191.245.32:19092, 160.191.245.32:29092, 160.191.245.32:39092
+#    consumer:
+#      group-id: blog
+#      auto-offset-reset: earliest
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+cloudinary:
+    cloud-name: dquyolinm
+    api-key: 659825411237395
+    api-secret: 9T4K_UdslDp_ngbZb2KldWcKl1Q
