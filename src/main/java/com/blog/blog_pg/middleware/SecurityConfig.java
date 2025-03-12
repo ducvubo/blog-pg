@@ -1,5 +1,6 @@
 package com.blog.blog_pg.middleware;
 
+import com.blog.blog_pg.utils.ApiKeyAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,9 +14,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 public class SecurityConfig {
 
     private final AccountAuthFilter accountAuthFilter;
+    private final ApiKeyAuthFilter apiKeyAuthFilter;
 
-    public SecurityConfig(AccountAuthFilter accountAuthFilter) {
+    public SecurityConfig(AccountAuthFilter accountAuthFilter,ApiKeyAuthFilter apiKeyAuthFilter) {
+
         this.accountAuthFilter = accountAuthFilter;
+        this.apiKeyAuthFilter = apiKeyAuthFilter;
     }
 
     @Bean
@@ -24,7 +28,8 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .anyRequest().authenticated()
                 .and()
-                .addFilterBefore(accountAuthFilter, CustomUserNamePassworDefault.class)  // Thêm filter của bạn vào trước filter xác thực
+                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class) // API Key Filter chạy trước xác thực
+                .addFilterBefore(accountAuthFilter, UsernamePasswordAuthenticationFilter.class)  // Thêm filter của bạn vào trước filter xác thực
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }

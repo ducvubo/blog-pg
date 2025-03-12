@@ -22,7 +22,7 @@ import java.util.Map;
 @Component
 public class AccountAuthFilter extends OncePerRequestFilter {
 
-    @Value("http://back_pg:5001/api/v1")
+    @Value("https://back.pg.taphoaictu.id.vn/api/v1")
     private String urlServiceBack;
 
     @Autowired
