@@ -18,9 +18,9 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
     @Override
     public ClientConfiguration clientConfiguration() {
         return ClientConfiguration.builder()
-                .connectedTo("160.191.51.57:9200") // Địa chỉ Elasticsearch
-                .usingSsl(createSslContext()) // Sử dụng SSL
-                .withBasicAuth("elastic", "H-rPa*H42fjDNi9uiNNr") // Xác thực
+                .connectedTo("elasticsearch.taphoaictu.id.vn:443") // Địa chỉ Elasticsearch
+                .usingSsl() // Sử dụng SSL
+                .withBasicAuth("elastic", "Duc17052003*") // Xác thực
                 .build();
     }
 
@@ -45,3 +45,4 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
         }
     }
 }
+

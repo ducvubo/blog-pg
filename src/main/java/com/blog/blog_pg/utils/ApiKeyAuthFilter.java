@@ -7,12 +7,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.env.Environment;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -65,6 +68,18 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
+            List<String> excludedUrls = Arrays.asList(
+                    "/api/v1/no-authen",
+                    "/auth/login",
+                    "/auth/register",
+                    "/api/v1/elasticsearch/create-index-and-add-data"
+            );
+
+            String requestURI = request.getRequestURI();
+
+            if (excludedUrls.contains(requestURI)) {
+                filterChain.doFilter(request, response);
+            }
             String signClient = request.getHeader(SIGN_HEADER);
             String nonce = request.getHeader(NONCE_HEADER);
             String stimeStr = request.getHeader(STIME_HEADER);
