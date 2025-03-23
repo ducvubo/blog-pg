@@ -8,15 +8,22 @@ import com.blog.blog_pg.dto.response.MetaPagination;
 import com.blog.blog_pg.dto.response.ResPagination;
 import com.blog.blog_pg.dto.response.category.CategoryName;
 import com.blog.blog_pg.entities.CategoryEntity;
+import com.blog.blog_pg.entities.LabelEntity;
 import com.blog.blog_pg.enums.EnumStatus;
 import com.blog.blog_pg.exception.BadRequestError;
+import com.blog.blog_pg.listener.CategoryEntityListener;
 import com.blog.blog_pg.middleware.Account;
 import com.blog.blog_pg.repository.CategoryRepository;
 import com.blog.blog_pg.service.CategoryService;
 import com.blog.blog_pg.utils.AccountUtils;
+import com.blog.blog_pg.utils.ElasticsearchUtils;
 import com.blog.blog_pg.utils.Slug;
+import jakarta.persistence.EntityListeners;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,8 +35,44 @@ import java.util.*;
 @Slf4j
 public class CategoryServiceImpl implements CategoryService {
 
+    private static final String CATEGORY_BLOG_PG_ELASTICSEARCH_INDEX = "category-blog-pg";
+
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ElasticsearchUtils elasticsearchUtils;
+
+    @Value("${sync.elasticsearch.enabled:false}")
+    private boolean syncElasticsearchEnabled;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void syncDataToElasticsearchOnStartup() {
+        if (!syncElasticsearchEnabled) {
+            log.info("Elasticsearch sync is disabled");
+            return;
+        }
+
+        try {
+            log.info("Starting data sync to Elasticsearch...");
+            List<CategoryEntity> categoryEntities = categoryRepository.findAll();
+
+            // Kiểm tra xem index đã tồn tại chưa
+            boolean indexExists = elasticsearchUtils.indexElasticsearchExists(CATEGORY_BLOG_PG_ELASTICSEARCH_INDEX);
+            if (indexExists) {
+                elasticsearchUtils.deleteAllDocByElasticsearch(CATEGORY_BLOG_PG_ELASTICSEARCH_INDEX);
+            }
+
+            // Đồng bộ tất cả labels
+            for (CategoryEntity category : categoryEntities) {
+                elasticsearchUtils.addDocToElasticsearch(CATEGORY_BLOG_PG_ELASTICSEARCH_INDEX, category.getCatId().toString(), category);
+            }
+            log.info("Data sync Category to Elasticsearch completed successfully");
+        } catch (Exception e) {
+            log.error("Failed to sync data to Elasticsearch: ", e);
+            throw new RuntimeException("Elasticsearch sync failed", e);
+        }
+    }
 
     @Override
     public CategoryEntity createCategory(CreateCategoryDto createCategoryDto, Account account) {

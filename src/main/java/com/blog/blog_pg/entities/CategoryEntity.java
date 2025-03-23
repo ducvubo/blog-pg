@@ -1,6 +1,7 @@
 package com.blog.blog_pg.entities;
 
 import com.blog.blog_pg.enums.EnumStatus;
+import com.blog.blog_pg.listener.CategoryEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(CategoryEntityListener.class)
 public class CategoryEntity {
     @Id
     @GeneratedValue(generator = "UUID")

@@ -1,7 +1,6 @@
 package com.blog.blog_pg.service.impl;
 
 import com.blog.blog_pg.dto.request.article.*;
-import com.blog.blog_pg.dto.response.ApiResponse;
 import com.blog.blog_pg.dto.response.MetaPagination;
 import com.blog.blog_pg.dto.response.ResPagination;
 import com.blog.blog_pg.dto.response.article.ArticleName;
@@ -15,6 +14,7 @@ import com.blog.blog_pg.repository.ArticleRepository;
 import com.blog.blog_pg.repository.CategoryRepository;
 import com.blog.blog_pg.service.ArticleService;
 import com.blog.blog_pg.utils.AccountUtils;
+import com.blog.blog_pg.utils.ElasticsearchUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.context.event.EventListener;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,6 +36,8 @@ import java.util.UUID;
 @Slf4j
 public class ArticleServiceImpl implements ArticleService {
 
+    private static final String ARTICLE_ELASTICSEARCH_INDEX = "article-blog-pg";
+
     @Autowired
     private ArticleRepository articleRepository;
 
@@ -41,6 +46,36 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ElasticsearchUtils elasticsearchUtils;
+
+    @Value("${sync.elasticsearch.enabled:false}")
+    private boolean syncElasticsearchEnabled;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void syncDataToElasticsearchOnStartup() {
+        if (!syncElasticsearchEnabled) {
+            log.info("Elasticsearch sync is disabled");
+            return;
+        }
+
+        try {
+            log.info("Starting data sync to Elasticsearch for articles...");
+            List<ArticleEntity> articles = articleRepository.findAll();
+            boolean indexExists = elasticsearchUtils.indexElasticsearchExists(ARTICLE_ELASTICSEARCH_INDEX);
+            if (indexExists) {
+                elasticsearchUtils.deleteAllDocByElasticsearch(ARTICLE_ELASTICSEARCH_INDEX);
+            }
+            for (ArticleEntity article : articles) {
+                elasticsearchUtils.addDocToElasticsearch(ARTICLE_ELASTICSEARCH_INDEX, article.getAtlId().toString(), article);
+            }
+            log.info("Data sync Article to Elasticsearch completed successfully");
+        } catch (Exception e) {
+            log.error("Failed to sync articles to Elasticsearch: ", e);
+            throw new RuntimeException("Elasticsearch sync failed", e);
+        }
+    }
 
     @Override
     public Boolean checkSlug(String slug, Account account) {

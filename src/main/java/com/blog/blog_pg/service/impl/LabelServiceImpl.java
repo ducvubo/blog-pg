@@ -12,12 +12,16 @@ import com.blog.blog_pg.middleware.Account;
 import com.blog.blog_pg.repository.LabelRepository;
 import com.blog.blog_pg.service.LabelService;
 import com.blog.blog_pg.utils.AccountUtils;
+import com.blog.blog_pg.utils.ElasticsearchUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Date;
 import java.util.List;
@@ -28,8 +32,44 @@ import java.util.UUID;
 @Slf4j
 public class LabelServiceImpl implements LabelService {
 
+    private static final String LABEL_ELASTICSEARCH_INDEX = "label-blog-pg";
+
     @Autowired
     private LabelRepository labelRepository;
+
+    @Autowired
+    private ElasticsearchUtils elasticsearchUtils;
+
+    @Value("${sync.elasticsearch.enabled:false}")
+    private boolean syncElasticsearchEnabled;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void syncDataToElasticsearchOnStartup() {
+        if (!syncElasticsearchEnabled) {
+            log.info("Elasticsearch sync is disabled");
+            return;
+        }
+
+        try {
+            log.info("Starting data sync to Elasticsearch...");
+            List<LabelEntity> labels = labelRepository.findAll();
+
+            // Kiểm tra xem index đã tồn tại chưa
+            boolean indexExists = elasticsearchUtils.indexElasticsearchExists(LABEL_ELASTICSEARCH_INDEX);
+            if (indexExists) {
+                elasticsearchUtils.deleteAllDocByElasticsearch(LABEL_ELASTICSEARCH_INDEX);
+            }
+
+            // Đồng bộ tất cả labels
+            for (LabelEntity label : labels) {
+                elasticsearchUtils.addDocToElasticsearch(LABEL_ELASTICSEARCH_INDEX, label.getLb_id().toString(), label);
+            }
+            log.info("Data sync to Elasticsearch completed successfully");
+        } catch (Exception e) {
+            log.error("Failed to sync data to Elasticsearch: ", e);
+            throw new RuntimeException("Elasticsearch sync failed", e);
+        }
+    }
 
     @Override
     public LabelEntity createLabel(CreateLabelDto createLabelDto, Account account) {

@@ -2,6 +2,7 @@ package com.blog.blog_pg.entities;
 
 import com.blog.blog_pg.enums.ArticleStatus;
 import com.blog.blog_pg.enums.ArticleType;
+import com.blog.blog_pg.listener.ArticleEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(ArticleEntityListener.class)
 public class ArticleEntity {
 
     @Id
