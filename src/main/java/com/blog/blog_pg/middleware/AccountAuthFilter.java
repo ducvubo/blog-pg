@@ -62,7 +62,8 @@ public class AccountAuthFilter extends OncePerRequestFilter {
                 "/auth/register",
                 "/api/v1/elasticsearch/create-index-and-add-data",
                 "/api/v1/categories/all-category-view",
-                "/api/v1/articles/all-article-view"
+                "/api/v1/articles/all-article-view",
+                "/api/v1/articles/slug"
         );
 
         String requestURI = request.getRequestURI();

@@ -4,6 +4,7 @@ import com.blog.blog_pg.dto.request.article.*;
 import com.blog.blog_pg.dto.response.ResPagination;
 import com.blog.blog_pg.dto.response.article.ArticleDTO;
 import com.blog.blog_pg.dto.response.article.ArticleName;
+import com.blog.blog_pg.dto.response.article.InforArticleDTO;
 import com.blog.blog_pg.entities.ArticleEntity;
 import com.blog.blog_pg.middleware.Account;
 
@@ -34,5 +35,6 @@ public interface ArticleService {
     List<ArticleName> getAllArticleByRestaurantId(Account account);
 
     List<ArticleDTO> getArticleAllView(String atlResId, String atlCatId);
+    InforArticleDTO getArticleBySlug(String slug, String clientId);
 
 }

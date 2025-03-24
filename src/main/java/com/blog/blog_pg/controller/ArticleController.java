@@ -6,6 +6,7 @@ import com.blog.blog_pg.dto.response.ApiResponse;
 import com.blog.blog_pg.dto.response.ResPagination;
 import com.blog.blog_pg.dto.response.article.ArticleDTO;
 import com.blog.blog_pg.dto.response.article.ArticleName;
+import com.blog.blog_pg.dto.response.article.InforArticleDTO;
 import com.blog.blog_pg.entities.ArticleEntity;
 import com.blog.blog_pg.entities.CategoryEntity;
 import com.blog.blog_pg.middleware.Account;
@@ -261,13 +262,22 @@ public class ArticleController {
 
     @GetMapping("/all-article-view")
     public ApiResponse<List<ArticleDTO>> getAllArticleView(@RequestParam(required = true) String resId,
-                                                            @RequestParam(required = true) String catId) {
-        log.info("Received resId: {}", resId);
-        log.info("Received catId: {}", catId);
+                                                            @RequestParam(required = false) String catId) {
         return ApiResponse.<List<ArticleDTO>>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Get all articles successfully")
                 .data(articleService.getArticleAllView(resId,catId))
+                .build();
+    }
+
+    @GetMapping("/slug")
+    public ApiResponse<InforArticleDTO> getArticleBySlug(@RequestParam(required = true) String slug,
+                                                         @RequestHeader(value = "x-cl-id", required = false) String clientId
+                                                         ) {
+        return ApiResponse.<InforArticleDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Get article by slug successfully")
+                .data(articleService.getArticleBySlug(slug,clientId))
                 .build();
     }
 

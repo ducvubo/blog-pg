@@ -11,4 +11,6 @@ public class ArticleDTO {
     private String atlId;
     private String atlTitle;
     private String atlSlug;
+    private String atlImage;
+    private Number atlPublishedTime;
 }

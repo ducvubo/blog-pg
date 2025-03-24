@@ -3,7 +3,9 @@ package com.blog.blog_pg.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import org.springframework.stereotype.Component;
 
+@Component
 public class RedisUtils {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();

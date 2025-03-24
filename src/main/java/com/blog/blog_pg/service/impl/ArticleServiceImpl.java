@@ -1,11 +1,13 @@
 package com.blog.blog_pg.service.impl;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import com.blog.blog_pg.dto.request.article.*;
 import com.blog.blog_pg.dto.response.MetaPagination;
 import com.blog.blog_pg.dto.response.ResPagination;
 import com.blog.blog_pg.dto.response.article.ArticleDTO;
 import com.blog.blog_pg.dto.response.article.ArticleName;
+import com.blog.blog_pg.dto.response.article.InforArticleDTO;
 import com.blog.blog_pg.entities.ArticleEntity;
 import com.blog.blog_pg.entities.CategoryEntity;
 import com.blog.blog_pg.enums.ArticleStatus;
@@ -17,6 +19,7 @@ import com.blog.blog_pg.repository.CategoryRepository;
 import com.blog.blog_pg.service.ArticleService;
 import com.blog.blog_pg.utils.AccountUtils;
 import com.blog.blog_pg.utils.ElasticsearchUtils;
+import com.blog.blog_pg.utils.RedisUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +55,14 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     private ElasticsearchUtils elasticsearchUtils;
 
+    private final RedisUtils redisUtils;
+
     @Value("${sync.elasticsearch.enabled:false}")
     private boolean syncElasticsearchEnabled;
+
+    public ArticleServiceImpl(RedisUtils redisUtils) {
+        this.redisUtils = redisUtils;
+    }
 
     @EventListener(ApplicationReadyEvent.class)
     public void syncDataToElasticsearchOnStartup() {
@@ -627,29 +636,42 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public List<ArticleDTO> getArticleAllView(String atlResId, String atlCatId) {
         try {
-            var searchResponse = elasticsearchClient.search(s -> s
-                            .index("article-blog-pg")
-                            .source(src -> src
-                                    .filter(f -> f.includes("atlId", "atlTitle", "atlSlug"))
-                            )
-                            .query(q -> q
-                                    .bool(b -> b
-                                            .must(m -> m
+            var searchResponse = elasticsearchClient.search(s -> {
+                s.index("article-blog-pg")
+                        .source(src -> src
+                                .filter(f -> f.includes("atlId", "atlTitle", "atlSlug", "atlImage", "atlPublishedTime"))
+                        )
+                        .from(0)
+                        .size(20)
+                        .sort(sort -> sort // Thêm sắp xếp theo atlPublishedTime giảm dần
+                                .field(f -> f
+                                        .field("atlPublishedTime")
+                                        .order(SortOrder.Desc))
+                        )
+                        .query(q -> q
+                                .bool(b -> {
+                                    // Always add atlResId condition
+                                    b.must(m -> m
                                                     .term(t -> t
                                                             .field("atlResId.keyword")
                                                             .value(atlResId)))
                                             .must(m -> m
                                                     .term(t -> t
-                                                            .field("catId.keyword")
-                                                            .value(atlCatId)))
-                                            .must(m -> m
-                                                    .term(t -> t
                                                             .field("atlStatus.keyword")
-                                                            .value("PUBLISHED")))
-                                    )
-                            ),
-                    ArticleDTO.class
-            );
+                                                            .value("PUBLISHED")));
+
+                                    // Only add atlCatId condition if it's not null and not empty
+                                    if (atlCatId != null && !atlCatId.isEmpty()) {
+                                        b.must(m -> m
+                                                .term(t -> t
+                                                        .field("catId.keyword")
+                                                        .value(atlCatId)));
+                                    }
+                                    return b;
+                                })
+                        );
+                return s;
+            }, ArticleDTO.class);
 
             return searchResponse.hits().hits().stream()
                     .map(hit -> hit.source())
@@ -659,6 +681,63 @@ public class ArticleServiceImpl implements ArticleService {
         } catch (Exception e) {
             log.error("Error retrieving articles from Elasticsearch: ", e);
             throw new RuntimeException("Failed to fetch articles from Elasticsearch", e);
+        }
+    }
+
+    @Override
+    public InforArticleDTO getArticleBySlug(String slug, String clientId) {
+        try {
+
+
+
+            var searchResponse = elasticsearchClient.search(s -> {
+                s.index("article-blog-pg")
+                        .source(src -> src
+                                .filter(f -> f.includes("atlId", "catId", "atlTitle", "atlDescription", "atlSlug", "atlImage", "atlType", "atlContent", "atlPublishedTime", "atlView", "listArticleRelated"))
+                        )
+                        .from(0)
+                        .size(1)
+                        .query(q -> q
+                                .bool(b -> {
+                                    b.must(m -> m
+                                            .term(t -> t
+                                                    .field("atlSlug.keyword")
+                                                    .value(slug)));
+                                    return b;
+                                })
+                        );
+                return s;
+            }, InforArticleDTO.class);
+
+            var hits = searchResponse.hits().hits();
+            if (hits.isEmpty()) {
+                return null;
+            }
+
+            InforArticleDTO article = hits.get(0).source();
+
+            String cacheKey = "read_article_" + slug + clientId;
+            if (redisUtils.getCacheIO(cacheKey, String.class) == null) {
+                try {
+                    UUID atlId = UUID.fromString(article.getAtlId());
+                    ArticleEntity articleEntity = articleRepository.findById(atlId).orElse(null);
+                    if (articleEntity != null) {
+                        articleEntity.setAtlView(articleEntity.getAtlView() + 1);
+                        articleRepository.save(articleEntity);
+                    }
+                    redisUtils.setCacheIOExpiration(cacheKey, "viewed", 5 * 60); // Cache 5 phút
+                } catch (IllegalArgumentException e) {
+                    log.error("Invalid UUID format for atlId: " + article.getAtlId(), e);
+                } catch (Exception e) {
+                    log.error("Error updating view count for article: " + article.getAtlId(), e);
+                }
+            }
+
+            return article;
+
+        } catch (Exception e) {
+            log.error("Error retrieving article from Elasticsearch: ", e);
+            throw new RuntimeException("Failed to fetch article from Elasticsearch", e);
         }
     }
 

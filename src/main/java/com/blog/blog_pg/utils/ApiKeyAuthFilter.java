@@ -72,9 +72,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
                     "/api/v1/no-authen",
                     "/auth/login",
                     "/auth/register",
-                    "/api/v1/elasticsearch/create-index-and-add-data",
-                    "/api/v1/categories/all-category-view",
-                    "/api/v1/articles/all-article-view"
+                    "/api/v1/elasticsearch/create-index-and-add-data"
             );
 
             String requestURI = request.getRequestURI();
@@ -118,7 +116,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            writeErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error", 500);
+//            writeErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error", 500);
         }
     }
 

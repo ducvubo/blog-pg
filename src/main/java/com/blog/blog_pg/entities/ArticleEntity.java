@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.Date;
 import java.util.List;
@@ -66,11 +68,13 @@ public class ArticleEntity {
     private int atlView;
 
     @ElementCollection
+    @Fetch(FetchMode.JOIN)
     @CollectionTable(name = "ArticleRelated", joinColumns = @JoinColumn(name = "alt_id"))
     @Column(name = "atlrelated_id")
     private List<String> listArticleRelated;
 
     @ElementCollection
+    @Fetch(FetchMode.JOIN)
     @CollectionTable(name = "ArticleNote", joinColumns = @JoinColumn(name = "alt_id"))
     @Column(name = "atlNote")
     private List<String> listArticleNote;

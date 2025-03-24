@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.jpa.repository.Modifying;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,4 +26,9 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, UUID> {
 
     @Query("SELECT new com.blog.blog_pg.dto.response.article.ArticleName(l.atlId,l.atlTitle,l.atlImage) FROM ArticleEntity l WHERE (l.atlResId = :atlResId) AND (l.isDeleted = :isDeleted)")
     List<ArticleName> findByAtlResId(@Param("atlResId") String atlResId, @Param("isDeleted") int isDeleted);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE ArticleEntity l SET l.atlView = l.atlView + 1 WHERE l.atlId = :atlId")
+    void updateView(@Param("atlId") UUID atlId);
 }
