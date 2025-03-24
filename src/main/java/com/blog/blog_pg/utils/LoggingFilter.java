@@ -88,12 +88,6 @@ public class LoggingFilter extends OncePerRequestFilter {
         String errorMessage = ex.getMessage() != null ? ex.getMessage() : "Unknown error";
         int statusCode = wrappedResponse.getStatus();
 
-        String message = String.format(
-                "\n - path: %s\n - statusCode: %d\n - METHOD: %s\n - id_user_guest: %s\n - time: %s\n - duration: %dms",
-                path, statusCode, method, idUserGuest, formatDate(new Date()), duration
-        );
-
-        logger.error(message + "\n - error: " + errorMessage, ex);
         saveLogApiError(idUserGuest, userAgent, clientIp, new Date(), duration, "", requestBody, errorMessage,
                 method, queryString, path, statusCode);
     }
@@ -109,12 +103,6 @@ public class LoggingFilter extends OncePerRequestFilter {
         String responseBody = getResponseBody(response);
         int statusCode = response.getStatus();
 
-        String message = String.format(
-                "\n - path: %s\n - statusCode: %d\n - METHOD: %s\n - id_user_guest: %s\n - time: %s\n - duration: %dms",
-                path, statusCode, method, idUserGuest, formatDate(new Date()), duration
-        );
-
-        logger.info(message);
         saveLogApiSuccess(idUserGuest, userAgent, clientIp, new Date(), duration, "", requestBody, responseBody,
                 method, queryString, path, statusCode);
     }

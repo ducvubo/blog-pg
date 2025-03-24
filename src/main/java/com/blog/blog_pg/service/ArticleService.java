@@ -2,6 +2,7 @@ package com.blog.blog_pg.service;
 
 import com.blog.blog_pg.dto.request.article.*;
 import com.blog.blog_pg.dto.response.ResPagination;
+import com.blog.blog_pg.dto.response.article.ArticleDTO;
 import com.blog.blog_pg.dto.response.article.ArticleName;
 import com.blog.blog_pg.entities.ArticleEntity;
 import com.blog.blog_pg.middleware.Account;
@@ -31,4 +32,7 @@ public interface ArticleService {
     ArticleEntity getArticle(String id, Account account);
     ResPagination<ArticleEntity> getAllArticle(int pageIndex , int pageSize, String atlTitle,int isDeleted,  Account account);
     List<ArticleName> getAllArticleByRestaurantId(Account account);
+
+    List<ArticleDTO> getArticleAllView(String atlResId, String atlCatId);
+
 }

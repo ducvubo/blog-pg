@@ -1,11 +1,13 @@
 package com.blog.blog_pg.service.impl;
 
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.blog.blog_pg.dto.request.category.CreateCategoryDto;
 import com.blog.blog_pg.dto.request.category.UpdateCategoryDto;
 import com.blog.blog_pg.dto.request.category.UpdateStatusCategoryDto;
 import com.blog.blog_pg.dto.response.MetaPagination;
 import com.blog.blog_pg.dto.response.ResPagination;
+import com.blog.blog_pg.dto.response.category.CategoryDTO;
 import com.blog.blog_pg.dto.response.category.CategoryName;
 import com.blog.blog_pg.entities.CategoryEntity;
 import com.blog.blog_pg.entities.LabelEntity;
@@ -43,6 +45,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private ElasticsearchUtils elasticsearchUtils;
 
+    @Autowired
+    private ElasticsearchClient elasticsearchClient;
+
     @Value("${sync.elasticsearch.enabled:false}")
     private boolean syncElasticsearchEnabled;
 
@@ -73,6 +78,49 @@ public class CategoryServiceImpl implements CategoryService {
             throw new RuntimeException("Elasticsearch sync failed", e);
         }
     }
+
+    @Override
+    public List<CategoryDTO> getCategoryAllView(String catResId) {
+        try {
+
+            var searchResponse = elasticsearchClient.search(s -> s
+                            .index(CATEGORY_BLOG_PG_ELASTICSEARCH_INDEX)
+                            .source(src -> src
+                                    .filter(f -> f
+                                            .includes("catName", "catSlug", "catId") // Chỉ lấy 3 field này
+                                    )
+                            )
+                            .query(q -> q
+                                    .bool(b -> b
+                                            .must(m -> m
+                                                    .term(t -> t
+                                                            .field("catResId.keyword")
+                                                            .value(catResId)))
+                                            .must(m -> m
+                                                    .term(t -> t
+                                                            .field("isDeleted")
+                                                            .value(0)))
+                                            .must(m -> m
+                                                    .match(t -> t
+                                                            .field("catStatus.keyword")
+                                                            .query("ENABLED")))
+
+                                    )
+                            ),
+                    CategoryDTO.class
+            );
+
+            return searchResponse.hits().hits().stream()
+                    .map(hit -> hit.source())
+                    .filter(Objects::nonNull)
+                    .toList();
+
+        } catch (Exception e) {
+            log.error("Error retrieving categories from Elasticsearch: ", e);
+            throw new RuntimeException("Failed to fetch categories from Elasticsearch", e);
+        }
+    }
+
 
     @Override
     public CategoryEntity createCategory(CreateCategoryDto createCategoryDto, Account account) {
@@ -232,4 +280,7 @@ public class CategoryServiceImpl implements CategoryService {
             throw new RuntimeException(e);
         }
     }
+
+
+
 }

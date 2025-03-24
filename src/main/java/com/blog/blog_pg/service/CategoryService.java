@@ -4,6 +4,7 @@ import com.blog.blog_pg.dto.request.category.CreateCategoryDto;
 import com.blog.blog_pg.dto.request.category.UpdateCategoryDto;
 import com.blog.blog_pg.dto.request.category.UpdateStatusCategoryDto;
 import com.blog.blog_pg.dto.response.ResPagination;
+import com.blog.blog_pg.dto.response.category.CategoryDTO;
 import com.blog.blog_pg.dto.response.category.CategoryName;
 import com.blog.blog_pg.entities.CategoryEntity;
 import com.blog.blog_pg.middleware.Account;
@@ -20,4 +21,6 @@ public interface CategoryService {
     ResPagination<CategoryEntity> getAllCategory(int pageIndex , int pageSize, String catName, Account account);
     ResPagination<CategoryEntity> getAllCategoryRecycleBin(int pageIndex , int pageSize, String catName, Account account);
     List<CategoryName> getAllCategoryByRestaurantId(Account account);
+
+    List<CategoryDTO> getCategoryAllView(String catResId);
 }

@@ -6,6 +6,7 @@ import com.blog.blog_pg.dto.request.category.UpdateCategoryDto;
 import com.blog.blog_pg.dto.request.category.UpdateStatusCategoryDto;
 import com.blog.blog_pg.dto.response.ApiResponse;
 import com.blog.blog_pg.dto.response.ResPagination;
+import com.blog.blog_pg.dto.response.category.CategoryDTO;
 import com.blog.blog_pg.dto.response.category.CategoryName;
 import com.blog.blog_pg.entities.CategoryEntity;
 import com.blog.blog_pg.middleware.Account;
@@ -63,6 +64,16 @@ public class CategoryController {
                 .data(categoryService.getAllCategory(pageIndex, pageSize, catName, account))
                 .build();
     }
+
+    @GetMapping("all-category-view")
+    public ApiResponse<List<CategoryDTO>> getAllCategorysView(@RequestParam(required = true) String resId) {
+        return ApiResponse.<List<CategoryDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Get all categories successfully")
+                .data(categoryService.getCategoryAllView(resId))
+                .build();
+    }
+
 
     @GetMapping("all")
     ApiResponse<List<CategoryName>> getAllCategorys() {

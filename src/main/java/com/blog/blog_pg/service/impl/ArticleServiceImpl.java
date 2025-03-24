@@ -1,8 +1,10 @@
 package com.blog.blog_pg.service.impl;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.blog.blog_pg.dto.request.article.*;
 import com.blog.blog_pg.dto.response.MetaPagination;
 import com.blog.blog_pg.dto.response.ResPagination;
+import com.blog.blog_pg.dto.response.article.ArticleDTO;
 import com.blog.blog_pg.dto.response.article.ArticleName;
 import com.blog.blog_pg.entities.ArticleEntity;
 import com.blog.blog_pg.entities.CategoryEntity;
@@ -27,10 +29,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -46,6 +45,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ElasticsearchClient elasticsearchClient;
 
     @Autowired
     private ElasticsearchUtils elasticsearchUtils;
@@ -104,7 +106,7 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleEntity articleEntity = ArticleEntity.builder()
                     .atlTitle(createArticleDefaultDto.getAtlTitle())
                     .atlContent(content)
-                    .category(categoryEntity.get())
+                    .catId(createArticleDefaultDto.getCatId())
                     .atlSlug(createArticleDefaultDto.getAtlSlug())
                     .atlResId(account.getAccountRestaurantId())
                     .atlType(ArticleType.DEFAULT)
@@ -142,7 +144,7 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleEntity articleEntity = ArticleEntity.builder()
                 .atlTitle(createArticleVideoDto.getAtlTitle())
                 .atlContent(content)
-                .category(categoryEntity.get())
+                .catId(createArticleVideoDto.getCatId())
                 .atlSlug(createArticleVideoDto.getAtlSlug())
                 .atlResId(account.getAccountRestaurantId())
                 .atlType(ArticleType.VIDEO)
@@ -180,7 +182,7 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleEntity articleEntity = ArticleEntity.builder()
                     .atlTitle(createArticleDocumentDto.getAtlTitle())
                     .atlContent(content)
-                    .category(categoryEntity.get())
+                    .catId(createArticleDocumentDto.getCatId())
                     .atlSlug(createArticleDocumentDto.getAtlSlug())
                     .atlResId(account.getAccountRestaurantId())
                     .atlType(ArticleType.DOCUMENT)
@@ -217,7 +219,7 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleEntity articleEntity = ArticleEntity.builder()
                     .atlTitle(createArticleImage.getAtlTitle())
                     .atlContent(content)
-                    .category(categoryEntity.get())
+                    .catId(createArticleImage.getCatId())
                     .atlSlug(createArticleImage.getAtlSlug())
                     .atlResId(account.getAccountRestaurantId())
                     .atlType(ArticleType.IMAGE)
@@ -265,7 +267,7 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleEntity articleEntity = articleExists.get();
             articleEntity.setAtlTitle(updateArticleDefaultDto.getAtlTitle());
             articleEntity.setAtlContent(content);
-            articleEntity.setCategory(categoryEntity.get());
+            articleEntity.setCatId(updateArticleDefaultDto.getCatId());
             articleEntity.setAtlSlug(updateArticleDefaultDto.getAtlSlug());
             articleEntity.setAtlResId(account.getAccountRestaurantId());
             articleEntity.setAtlDescription(updateArticleDefaultDto.getAtlDescription());
@@ -311,7 +313,7 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleEntity articleEntity = articleExists.get();
             articleEntity.setAtlTitle(updateArticleVideoDto.getAtlTitle());
             articleEntity.setAtlContent(content);
-            articleEntity.setCategory(categoryEntity.get());
+            articleEntity.setCatId(updateArticleVideoDto.getCatId());
             articleEntity.setAtlSlug(updateArticleVideoDto.getAtlSlug());
             articleEntity.setAtlResId(account.getAccountRestaurantId());
             articleEntity.setAtlDescription(updateArticleVideoDto.getAtlDescription());
@@ -351,7 +353,7 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleEntity articleEntity = articleExists.get();
             articleEntity.setAtlTitle(updateArticleDocumentDto.getAtlTitle());
             articleEntity.setAtlContent(content);
-            articleEntity.setCategory(categoryEntity.get());
+             articleEntity.setCatId(updateArticleDocumentDto.getCatId());
             articleEntity.setAtlSlug(updateArticleDocumentDto.getAtlSlug());
             articleEntity.setAtlResId(account.getAccountRestaurantId());
             articleEntity.setAtlType(ArticleType.DEFAULT);
@@ -398,7 +400,7 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleEntity articleEntity = articleExists.get();
             articleEntity.setAtlTitle(updateArticleImage.getAtlTitle());
             articleEntity.setAtlContent(content);
-            articleEntity.setCategory(categoryEntity.get());
+             articleEntity.setCatId(updateArticleImage.getCatId());
             articleEntity.setAtlSlug(updateArticleImage.getAtlSlug());
             articleEntity.setAtlResId(account.getAccountRestaurantId());
             articleEntity.setAtlDescription(updateArticleImage.getAtlDescription());
@@ -621,4 +623,43 @@ public class ArticleServiceImpl implements ArticleService {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public List<ArticleDTO> getArticleAllView(String atlResId, String atlCatId) {
+        try {
+            var searchResponse = elasticsearchClient.search(s -> s
+                            .index("article-blog-pg")
+                            .source(src -> src
+                                    .filter(f -> f.includes("atlId", "atlTitle", "atlSlug"))
+                            )
+                            .query(q -> q
+                                    .bool(b -> b
+                                            .must(m -> m
+                                                    .term(t -> t
+                                                            .field("atlResId.keyword")
+                                                            .value(atlResId)))
+                                            .must(m -> m
+                                                    .term(t -> t
+                                                            .field("catId.keyword")
+                                                            .value(atlCatId)))
+                                            .must(m -> m
+                                                    .term(t -> t
+                                                            .field("atlStatus.keyword")
+                                                            .value("PUBLISHED")))
+                                    )
+                            ),
+                    ArticleDTO.class
+            );
+
+            return searchResponse.hits().hits().stream()
+                    .map(hit -> hit.source())
+                    .filter(Objects::nonNull)
+                    .toList();
+
+        } catch (Exception e) {
+            log.error("Error retrieving articles from Elasticsearch: ", e);
+            throw new RuntimeException("Failed to fetch articles from Elasticsearch", e);
+        }
+    }
+
 }

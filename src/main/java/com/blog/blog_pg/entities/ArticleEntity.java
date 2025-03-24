@@ -30,9 +30,8 @@ public class ArticleEntity {
     @Column(name = "atlResId")
     private String atlResId;
 
-    @ManyToOne
-    @JoinColumn(name = "catId")
-    private CategoryEntity category;
+    @Column(name = "catId")
+    private String catId;
 
     @Column(name = "atlTitle")
     private String atlTitle;
