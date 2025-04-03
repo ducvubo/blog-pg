@@ -18,7 +18,7 @@ spring:
       add-mappings: false
 
   datasource:
-    url: jdbc:oracle:thin:@//160.191.51.57:1521/ORCLPDB1
+    url: jdbc:oracle:thin:@//160.187.229.179:1521/ORCLPDB1
     username: BlogPG
     password: Duc17052003*
     driver-class-name: oracle.jdbc.OracleDriver

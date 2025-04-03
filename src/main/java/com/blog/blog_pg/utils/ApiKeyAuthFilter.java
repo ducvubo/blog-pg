@@ -72,7 +72,8 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
                     "/api/v1/no-authen",
                     "/auth/login",
                     "/auth/register",
-                    "/api/v1/elasticsearch/create-index-and-add-data"
+                    "/api/v1/elasticsearch/create-index-and-add-data",
+                    "/api/v1/comments"
             );
 
             String requestURI = request.getRequestURI();
