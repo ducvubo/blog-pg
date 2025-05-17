@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .anyRequest().authenticated()
                 .and()
-                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class) // API Key Filter chạy trước xác thực
+//                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class) // API Key Filter chạy trước xác thực
                 .addFilterBefore(accountAuthFilter, UsernamePasswordAuthenticationFilter.class)  // Thêm filter của bạn vào trước filter xác thực
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();

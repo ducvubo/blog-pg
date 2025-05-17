@@ -53,6 +53,16 @@ public class ArticleController {
                 .build();
     }
 
+    @PostMapping("/add/default-n8n")
+    ApiResponse<ArticleEntity> createArticleDefaultN8N(@Valid @RequestBody CreateArticleDefaultDto createArticleDefaultDto) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ApiResponse.<ArticleEntity>builder()
+                .statusCode(HttpStatus.CREATED.value())
+                .message("Create article default successfully")
+                .data(articleService.createArticleDefault(createArticleDefaultDto,account))
+                .build();
+    }
+
     @PostMapping("/add/video")
     ApiResponse<ArticleEntity> createArticleVideo(@Valid @RequestBody CreateArticleVideoDto createArticleVideoDto) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

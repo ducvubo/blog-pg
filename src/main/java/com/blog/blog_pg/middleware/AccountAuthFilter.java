@@ -64,7 +64,8 @@ public class AccountAuthFilter extends OncePerRequestFilter {
                 "/api/v1/categories/all-category-view",
                 "/api/v1/articles/all-article-view",
                 "/api/v1/articles/slug",
-                "/api/v1/comments"
+                "/api/v1/comments",
+                "/add/default-n8n"
         );
 
         String requestURI = request.getRequestURI();
@@ -72,7 +73,7 @@ public class AccountAuthFilter extends OncePerRequestFilter {
         if (excludedUrls.contains(requestURI)) {
 
             ObjectMapper objectMapper = new ObjectMapper();
-            Account account = objectMapper.convertValue(new Account("1","vminhduc8@gmail.com","**********","user","admin","1234567890","1234567890"), Account.class);
+            Account account = objectMapper.convertValue(new Account("67822070f142dddb4e76a252","vminhduc8@gmail.com","**********","user","admin","677aac262fc0d1491a5ca032","1234567890"), Account.class);
             SecurityContextHolder.getContext().setAuthentication(new AccountAuthenticationToken(account));
 
             filterChain.doFilter(request, response);
