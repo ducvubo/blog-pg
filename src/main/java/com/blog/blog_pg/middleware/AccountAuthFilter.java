@@ -65,7 +65,7 @@ public class AccountAuthFilter extends OncePerRequestFilter {
                 "/api/v1/articles/all-article-view",
                 "/api/v1/articles/slug",
                 "/api/v1/comments",
-                "/add/default-n8n"
+                "/api/v1/articles/add/default-n8n"
         );
 
         String requestURI = request.getRequestURI();
