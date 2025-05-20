@@ -553,7 +553,7 @@ public class ArticleServiceImpl implements ArticleService {
                 throw new BadRequestError("Bài viết không tồn tại");
             }
 
-            if(articleEntity.get().getAtlStatus() == ArticleStatus.DRAFT || articleEntity.get().getAtlStatus() == ArticleStatus.REJECTED){
+            if(articleEntity.get().getAtlStatus() == ArticleStatus.DRAFT || articleEntity.get().getAtlStatus() == ArticleStatus.REJECTED || articleEntity.get().getAtlStatus() == ArticleStatus.UNPUBLISHED){
                 articleEntity.get().setIsDeleted(1);
                 articleEntity.get().setDeletedBy(AccountUtils.convertAccountToJson(account));
                 articleEntity.get().setDeletedAt(new Date(System.currentTimeMillis()));
