@@ -41,14 +41,14 @@ public class RedisConfig {
             while (true) {
                 try {
                     if (connection.isOpen()) {
-                        logger.info("connection redis - Connection status: connected");
+//                        logger.info("connection redis - Connection status: connected");
                         RedisCommands<String, String> sync = connection.sync();
                         sync.ping(); // Kiểm tra kết nối
                     }
                     Thread.sleep(15000); // Kiểm tra mỗi 5 giây
                 } catch (Exception e) {
-                    logger.error("connection redis - Connection status: error {}", e.getMessage());
-                    logger.info("connection redis - Connection status: reconnecting");
+//                    logger.error("connection redis - Connection status: error {}", e.getMessage());
+//                    logger.info("connection redis - Connection status: reconnecting");
                     // Lettuce tự động reconnect, không cần xử lý thủ công
                 }
             }

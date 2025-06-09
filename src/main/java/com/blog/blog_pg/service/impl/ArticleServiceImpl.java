@@ -286,6 +286,11 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
 
             articleRepository.save(articleEntity);
+
+            //xóa cache
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
+
             return articleEntity;
 
         } catch (Exception e) {
@@ -332,6 +337,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
 
             articleRepository.save(articleEntity);
+            //xóa cache
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity;
 
         } catch (Exception e) {
@@ -373,6 +381,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
 
             articleRepository.save(articleEntity);
+             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+             redisUtils.deleteCacheIO(cacheKey);
             return articleEntity;
 
         } catch (Exception e) {
@@ -419,6 +429,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
 
             articleRepository.save(articleEntity);
+             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+             redisUtils.deleteCacheIO(cacheKey);
             return articleEntity;
 
         } catch (Exception e) {
@@ -436,6 +448,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.get().setAtlStatus(ArticleStatus.PENDING_APPROVAL);
             articleEntity.get().setUpdatedBy(AccountUtils.convertAccountToJson(account));
             articleRepository.save(articleEntity.get());
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -452,6 +466,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.get().setAtlStatus(ArticleStatus.PENDING_PUBLISH);
             articleEntity.get().setUpdatedBy(AccountUtils.convertAccountToJson(account));
             articleRepository.save(articleEntity.get());
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -468,6 +484,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.get().setAtlStatus(ArticleStatus.REJECTED);
             articleEntity.get().setUpdatedBy(AccountUtils.convertAccountToJson(account));
             articleRepository.save(articleEntity.get());
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -485,6 +503,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.get().setAtlPublishedTime(new Date(System.currentTimeMillis()));
             articleEntity.get().setUpdatedBy(AccountUtils.convertAccountToJson(account));
             articleRepository.save(articleEntity.get());
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -506,6 +526,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.get().setAtlPublishedSchedule(scheduleDate);
             articleEntity.get().setUpdatedBy(AccountUtils.convertAccountToJson(account));
             articleRepository.save(articleEntity.get());
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -523,6 +545,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.get().setAtlPublishedSchedule(null);
             articleEntity.get().setUpdatedBy(AccountUtils.convertAccountToJson(account));
             articleRepository.save(articleEntity.get());
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -539,6 +563,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.get().setAtlStatus(ArticleStatus.UNPUBLISHED);
             articleEntity.get().setUpdatedBy(AccountUtils.convertAccountToJson(account));
             articleRepository.save(articleEntity.get());
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -558,6 +584,8 @@ public class ArticleServiceImpl implements ArticleService {
                 articleEntity.get().setDeletedBy(AccountUtils.convertAccountToJson(account));
                 articleEntity.get().setDeletedAt(new Date(System.currentTimeMillis()));
                 articleRepository.save(articleEntity.get());
+                String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+                redisUtils.deleteCacheIO(cacheKey);
                 return articleEntity.get();
             }else {
                 throw new BadRequestError("Article is not draft or rejected");
@@ -584,6 +612,8 @@ public class ArticleServiceImpl implements ArticleService {
             articleEntity.get().setDeletedBy(null);
             articleEntity.get().setDeletedAt(null);
             articleRepository.save(articleEntity.get());
+            String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
+            redisUtils.deleteCacheIO(cacheKey);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -636,6 +666,16 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public List<ArticleDTO> getArticleAllView(String atlResId, String atlCatId) {
         try {
+
+            //tìm trong cache
+            String cacheKey = "article_all_view_" + atlResId;
+            List<ArticleDTO> cachedArticles = redisUtils.getCacheIO(cacheKey, List.class);
+            if (cachedArticles != null) {
+                log.info("Data From Cache");
+                return cachedArticles;
+            }
+            // Nếu không có trong cache, tìm trong Elasticsearch
+
             var searchResponse = elasticsearchClient.search(s -> {
                 s.index("article-blog-pg")
                         .source(src -> src
@@ -672,6 +712,15 @@ public class ArticleServiceImpl implements ArticleService {
                         );
                 return s;
             }, ArticleDTO.class);
+
+            // Lưu kết quả vào cache
+            List<ArticleDTO> articles = searchResponse.hits().hits().stream()
+                    .map(hit -> hit.source())
+                    .filter(Objects::nonNull)
+                    .toList();
+            redisUtils.setCacheIO(cacheKey, articles); // Cache 5 phút
+
+            log.info("Data From Elasticsearch");
 
             return searchResponse.hits().hits().stream()
                     .map(hit -> hit.source())
