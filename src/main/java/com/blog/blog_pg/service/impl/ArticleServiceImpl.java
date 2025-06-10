@@ -291,6 +291,10 @@ public class ArticleServiceImpl implements ArticleService {
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
 
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + updateArticleDefaultDto.getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
+
             return articleEntity;
 
         } catch (Exception e) {
@@ -340,6 +344,11 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + updateArticleVideoDto.getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
+
             return articleEntity;
 
         } catch (Exception e) {
@@ -383,6 +392,10 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity);
              String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
              redisUtils.deleteCacheIO(cacheKey);
+
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + updateArticleDocumentDto.getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity;
 
         } catch (Exception e) {
@@ -431,6 +444,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity);
              String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
              redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + updateArticleImage.getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity;
 
         } catch (Exception e) {
@@ -450,6 +466,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity.get());
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -468,6 +487,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity.get());
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -486,6 +508,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity.get());
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -505,6 +530,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity.get());
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -528,6 +556,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity.get());
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -547,6 +578,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity.get());
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -565,6 +599,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity.get());
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -586,6 +623,9 @@ public class ArticleServiceImpl implements ArticleService {
                 articleRepository.save(articleEntity.get());
                 String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
                 redisUtils.deleteCacheIO(cacheKey);
+                //xóa cache bài viết theo slug
+                String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+                redisUtils.deleteCacheIO(cacheKeyArticle);
                 return articleEntity.get();
             }else {
                 throw new BadRequestError("Article is not draft or rejected");
@@ -614,6 +654,9 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleEntity.get());
             String cacheKey = "article_all_view_" + account.getAccountRestaurantId();
             redisUtils.deleteCacheIO(cacheKey);
+            //xóa cache bài viết theo slug
+            String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
+            redisUtils.deleteCacheIO(cacheKeyArticle);
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -736,9 +779,35 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public InforArticleDTO getArticleBySlug(String slug, String clientId) {
         try {
+            // Tìm trong cache
+            String cacheKeArticle = "read_article_" + slug;
+            InforArticleDTO cachedArticle = redisUtils.getCacheIO(cacheKeArticle, InforArticleDTO.class);
+            if (cachedArticle != null) {
+                log.info("Data Article Slug From Cache");
+                String cacheKey = "read_article_" + slug + clientId;
+                if (redisUtils.getCacheIO(cacheKey, String.class) == null) {
+                    try {
+                        UUID atlId = UUID.fromString(cachedArticle.getAtlId());
+                        ArticleEntity articleEntity = articleRepository.findById(atlId).orElse(null);
+                        if (articleEntity != null) {
+                            articleEntity.setAtlView(articleEntity.getAtlView() + 1);
+                            articleRepository.save(articleEntity);
 
+                            // Cập nhật lại view mới vào DTO và cache lại
+                            cachedArticle.setAtlView(articleEntity.getAtlView());
+                            redisUtils.setCacheIO(cacheKeArticle, cachedArticle); // cập nhật lại cache
+                        }
+                        redisUtils.setCacheIOExpiration(cacheKey, "viewed", 5 * 60); // Cache 5 phút
+                    } catch (IllegalArgumentException e) {
+                        log.error("Invalid UUID format for atlId: " + cachedArticle.getAtlId(), e);
+                    } catch (Exception e) {
+                        log.error("Error updating view count for article: " + cachedArticle.getAtlId(), e);
+                    }
+                }
+                return cachedArticle;
+            }
 
-
+            // Nếu không có cache, tìm trong Elasticsearch
             var searchResponse = elasticsearchClient.search(s -> {
                 s.index("article-blog-pg")
                         .source(src -> src
@@ -747,13 +816,14 @@ public class ArticleServiceImpl implements ArticleService {
                         .from(0)
                         .size(1)
                         .query(q -> q
-                                .bool(b -> {
-                                    b.must(m -> m
-                                            .term(t -> t
-                                                    .field("atlSlug.keyword")
-                                                    .value(slug)));
-                                    return b;
-                                })
+                                .bool(b -> b
+                                        .must(m -> m
+                                                .term(t -> t
+                                                        .field("atlSlug.keyword")
+                                                        .value(slug)
+                                                )
+                                        )
+                                )
                         );
                 return s;
             }, InforArticleDTO.class);
@@ -762,6 +832,8 @@ public class ArticleServiceImpl implements ArticleService {
             if (hits.isEmpty()) {
                 return null;
             }
+
+            log.info("Data Article Slug From Elasticsearch");
 
             InforArticleDTO article = hits.get(0).source();
 
@@ -773,6 +845,9 @@ public class ArticleServiceImpl implements ArticleService {
                     if (articleEntity != null) {
                         articleEntity.setAtlView(articleEntity.getAtlView() + 1);
                         articleRepository.save(articleEntity);
+
+                        // Cập nhật lại view trong DTO trước khi cache
+                        article.setAtlView(articleEntity.getAtlView());
                     }
                     redisUtils.setCacheIOExpiration(cacheKey, "viewed", 5 * 60); // Cache 5 phút
                 } catch (IllegalArgumentException e) {
@@ -782,6 +857,7 @@ public class ArticleServiceImpl implements ArticleService {
                 }
             }
 
+            redisUtils.setCacheIO(cacheKeArticle, article);
             return article;
 
         } catch (Exception e) {
@@ -789,5 +865,6 @@ public class ArticleServiceImpl implements ArticleService {
             throw new RuntimeException("Failed to fetch article from Elasticsearch", e);
         }
     }
+
 
 }
