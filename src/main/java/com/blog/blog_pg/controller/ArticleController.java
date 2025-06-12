@@ -260,6 +260,36 @@ public class ArticleController {
                 .build();
     }
 
+    @GetMapping("/all-article-view")
+    public ApiResponse<List<ArticleDTO>> getAllArticleView(@RequestParam(required = true) String resId,
+                                                           @RequestParam(required = false) String catId) {
+        return ApiResponse.<List<ArticleDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Get all articles successfully")
+                .data(articleService.getArticleAllView(resId,catId))
+                .build();
+    }
+
+    @GetMapping("/count-total-view")
+    public ApiResponse<Integer> countTotalView() {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ApiResponse.<Integer>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Count total view successfully")
+                .data(articleService.countTotalView(account))
+                .build();
+    }
+
+    @GetMapping("/top-5-article-by-view")
+    public ApiResponse<List<ArticleEntity>> getTop5ArticleByView() {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ApiResponse.<List<ArticleEntity>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Get top 5 articles by view successfully")
+                .data(articleService.getTop5ArticleByView(account))
+                .build();
+    }
+
     @GetMapping("/{atlId}")
     ApiResponse<ArticleEntity> getArticle(@PathVariable String atlId) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -270,15 +300,9 @@ public class ArticleController {
                 .build();
     }
 
-    @GetMapping("/all-article-view")
-    public ApiResponse<List<ArticleDTO>> getAllArticleView(@RequestParam(required = true) String resId,
-                                                            @RequestParam(required = false) String catId) {
-        return ApiResponse.<List<ArticleDTO>>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Get all articles successfully")
-                .data(articleService.getArticleAllView(resId,catId))
-                .build();
-    }
+
+
+
 
     @GetMapping("/slug")
     public ApiResponse<InforArticleDTO> getArticleBySlug(@RequestParam(required = true) String slug,

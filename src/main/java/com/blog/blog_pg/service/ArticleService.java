@@ -37,4 +37,8 @@ public interface ArticleService {
     List<ArticleDTO> getArticleAllView(String atlResId, String atlCatId);
     InforArticleDTO getArticleBySlug(String slug, String clientId);
 
+    Integer countTotalView(Account account);
+    //lấy 5 bài viết có lượt xem nhiều nhất
+    List<ArticleEntity> getTop5ArticleByView(Account account);
+
 }

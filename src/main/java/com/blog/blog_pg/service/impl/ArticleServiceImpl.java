@@ -866,5 +866,26 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    @Override
+    public Integer countTotalView(Account account) {
+        try {
+            return articleRepository.countTotalViewByRestaurantId(account.getAccountRestaurantId());
+        } catch (Exception e) {
+            log.error("Error counting total views: ", e);
+            throw new RuntimeException("Failed to count total views", e);
+        }
+    }
+
+    @Override
+    public List<ArticleEntity> getTop5ArticleByView(Account account) {
+        try {
+            Pageable topFive = PageRequest.of(0, 5);
+            return articleRepository.findTop5ByAtlResIdOrderByAtlViewDesc(account.getAccountRestaurantId(),topFive);
+        } catch (Exception e) {
+            log.error("Error retrieving top 5 articles by view: ", e);
+            throw new RuntimeException("Failed to fetch top 5 articles by view", e);
+        }
+    }
+
 
 }

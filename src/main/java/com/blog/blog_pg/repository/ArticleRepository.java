@@ -31,4 +31,11 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, UUID> {
     @Modifying
     @Query("UPDATE ArticleEntity l SET l.atlView = l.atlView + 1 WHERE l.atlId = :atlId")
     void updateView(@Param("atlId") UUID atlId);
+
+//    countTotalViewByRestaurantId
+    @Query("SELECT SUM(l.atlView) FROM ArticleEntity l WHERE l.atlResId = :atlResId AND l.isDeleted = 0")
+    Integer countTotalViewByRestaurantId(@Param("atlResId") String atlResId);
+
+    @Query("SELECT l FROM ArticleEntity l WHERE l.atlResId = :atlResId AND l.isDeleted = 0 ORDER BY l.atlView DESC")
+    List<ArticleEntity> findTop5ByAtlResIdOrderByAtlViewDesc(@Param("atlResId") String atlResId, Pageable pageable);
 }
