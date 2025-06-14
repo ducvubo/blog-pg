@@ -271,6 +271,7 @@ public class ArticleServiceImpl implements ArticleService {
                     }
                 }
             }
+            String oldSlug = articleExists.get().getAtlSlug();
             String content = objectMapper.writeValueAsString(updateArticleDefaultDto.getArticleDefaultModel());
 
             ArticleEntity articleEntity = articleExists.get();
@@ -294,6 +295,10 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + updateArticleDefaultDto.getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            //xóa cache bài viết theo slug cũ
+            String oldCacheKeyArticle = "read_article_" + oldSlug;
+            redisUtils.deleteCacheIO(oldCacheKeyArticle);
 
             return articleEntity;
 
@@ -326,6 +331,7 @@ public class ArticleServiceImpl implements ArticleService {
                 }
             }
 
+            String oldSlug = articleExists.get().getAtlSlug();
             String content = objectMapper.writeValueAsString(updateArticleVideoDto.getArticleVideoModel());
 
             ArticleEntity articleEntity = articleExists.get();
@@ -348,6 +354,9 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + updateArticleVideoDto.getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            //xóa cache bài viết theo slug cũ
+            String oldCacheKeyArticle = "read_article_" + oldSlug;
 
             return articleEntity;
 
@@ -373,6 +382,8 @@ public class ArticleServiceImpl implements ArticleService {
             if (articleExists.isEmpty()) {
                 throw new BadRequestError("Bài viết không tồn tại");
             }
+
+
 
             String content = objectMapper.writeValueAsString(updateArticleDocumentDto.getArticleDocumentModel());
 
@@ -427,6 +438,7 @@ public class ArticleServiceImpl implements ArticleService {
                     }
                 }
 
+            String oldSlug = articleExists.get().getAtlSlug();
             String content = objectMapper.writeValueAsString(updateArticleImage.getListArticleImage());
 
             ArticleEntity articleEntity = articleExists.get();
@@ -447,6 +459,10 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + updateArticleImage.getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            //xóa cache bài viết theo slug cũ
+            String oldCacheKeyArticle = "read_article_" + oldSlug;
+            redisUtils.deleteCacheIO(oldCacheKeyArticle);
             return articleEntity;
 
         } catch (Exception e) {
@@ -811,20 +827,19 @@ public class ArticleServiceImpl implements ArticleService {
             var searchResponse = elasticsearchClient.search(s -> {
                 s.index("article-blog-pg")
                         .source(src -> src
-                                .filter(f -> f.includes("atlId", "catId", "atlTitle", "atlDescription", "atlSlug", "atlImage", "atlType", "atlContent", "atlPublishedTime", "atlView", "listArticleRelated"))
-                        )
-                        .from(0)
-                        .size(1)
-                        .query(q -> q
-                                .bool(b -> b
-                                        .must(m -> m
-                                                .term(t -> t
-                                                        .field("atlSlug.keyword")
-                                                        .value(slug)
+                                .filter(f -> f.includes("atlId", "catId", "atlTitle", "atlDescription", "atlSlug", "atlImage", "atlType", "atlContent", "atlPublishedTime", "atlView", "listArticleRelated", "isDeleted", "atlStatus")))
+                                .from(0)
+                                .size(1)
+                                .query(q -> q
+                                        .bool(b -> b
+                                                .must(m -> m
+                                                        .term(t -> t
+                                                                .field("atlSlug.keyword")
+                                                                .value(slug)
+                                                        )
                                                 )
                                         )
-                                )
-                        );
+                                );
                 return s;
             }, InforArticleDTO.class);
 
@@ -836,6 +851,14 @@ public class ArticleServiceImpl implements ArticleService {
             log.info("Data Article Slug From Elasticsearch");
 
             InforArticleDTO article = hits.get(0).source();
+
+            //kiểm tra xem
+            if (article.getIsDeleted() == 1) {
+                throw new BadRequestError("Bài viết không tồn tại hoặc đã bị xóa");
+            }
+            if (article.getAtlStatus() != ArticleStatus.PUBLISHED) {
+                throw new BadRequestError("Bài viết không tồn tại hoặc chưa được phê duyệt");
+            }
 
             String cacheKey = "read_article_" + slug + clientId;
             if (redisUtils.getCacheIO(cacheKey, String.class) == null) {

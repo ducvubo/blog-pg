@@ -37,5 +37,9 @@ public class InforArticleDTO {
 
     private int atlView;
 
+    private ArticleStatus atlStatus;
+
+    private int isDeleted;
+
     private List<String> listArticleRelated;
 }
