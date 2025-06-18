@@ -21,7 +21,7 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, UUID> {
     @Query("SELECT l FROM ArticleEntity l WHERE (l.atlSlug = :atlSlug) AND (l.atlResId = :atlResId)")
     List<ArticleEntity> findByAtlSlug(@Param("atlSlug") String atlSlug, @Param("atlResId") String atlResId);
 
-    @Query("SELECT l FROM ArticleEntity l WHERE (l.atlTitle LIKE %:atlTitle%) AND (l.atlResId = :atlResId) AND (l.isDeleted = :isDeleted)")
+    @Query("SELECT l FROM ArticleEntity l WHERE (l.atlTitle LIKE %:atlTitle%) AND (l.atlResId = :atlResId) AND (l.isDeleted = :isDeleted) ORDER BY l.updatedAt DESC")
     Page<ArticleEntity> findByFilters(@Param("atlTitle") String atlTitle, @Param("atlResId") String atlResId, @Param("isDeleted") int isDeleted, Pageable pageable);
 
     @Query("SELECT new com.blog.blog_pg.dto.response.article.ArticleName(l.atlId,l.atlTitle,l.atlImage) FROM ArticleEntity l WHERE (l.atlResId = :atlResId) AND (l.isDeleted = :isDeleted)")
