@@ -22,7 +22,6 @@ import com.blog.blog_pg.utils.AccountUtils;
 import com.blog.blog_pg.utils.ElasticsearchUtils;
 import com.blog.blog_pg.utils.Slug;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityListeners;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -189,100 +188,133 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryEntity updateCategory(UpdateCategoryDto updateCategoryDto, Account account) {
-        UUID cat_id = UUID.fromString(updateCategoryDto.getCatId());
-        Optional<CategoryEntity> categoryEntityOptional = categoryRepository.findById(cat_id);
-        if(categoryEntityOptional.isEmpty()){
-            throw new BadRequestError("Danh mục không tồn tại");
+        try{
+
+            UUID cat_id = UUID.fromString(updateCategoryDto.getCatId());
+            Optional<CategoryEntity> categoryEntityOptional = categoryRepository.findById(cat_id);
+            if(categoryEntityOptional.isEmpty()){
+                throw new BadRequestError("Danh mục không tồn tại");
+            }
+            Random random = new Random();
+            int number = 100000 + random.nextInt(900000);
+            String slug = Slug.createSlug(updateCategoryDto.getCatName()) + "-" + number;
+            CategoryEntity categoryEntity = categoryEntityOptional.get();
+            categoryEntity.setCatSlug(slug);
+            categoryEntity.setCatOrder(updateCategoryDto.getCatOrder());
+            categoryEntity.setCatName(updateCategoryDto.getCatName());
+            categoryEntity.setCatDescription(updateCategoryDto.getCatDescription());
+            categoryEntity.setCatOrder(updateCategoryDto.getCatOrder());
+            categoryEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
+            categoryRepository.save(categoryEntity);
+            // Gửi thông báo đến Kafka sau khi cập nhật danh mục
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Danh mục bài viết đã được cập nhật")
+                    .notiContent("Danh mục bài viết: " + updateCategoryDto.getCatName() + " đã được cập nhật")
+                    .notiType("category_update")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+            return categoryEntity;
+        }catch (Exception e) {
+            log.error("Error: ", e);
+            throw new RuntimeException(e);
         }
-        Random random = new Random();
-        int number = 100000 + random.nextInt(900000);
-        String slug = Slug.createSlug(updateCategoryDto.getCatName()) + "-" + number;
-        CategoryEntity categoryEntity = categoryEntityOptional.get();
-        categoryEntity.setCatSlug(slug);
-        categoryEntity.setCatOrder(updateCategoryDto.getCatOrder());
-        categoryEntity.setCatName(updateCategoryDto.getCatName());
-        categoryEntity.setCatDescription(updateCategoryDto.getCatDescription());
-        categoryEntity.setCatOrder(updateCategoryDto.getCatOrder());
-        categoryEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
-        categoryRepository.save(categoryEntity);
-        // Gửi thông báo đến Kafka sau khi cập nhật danh mục
-        CreateNotification createNotification = CreateNotification.builder()
-                .notiAccId(account.getAccountRestaurantId())
-                .notiTitle("Danh mục bài viết đã được cập nhật")
-                .notiContent("Danh mục bài viết: " + updateCategoryDto.getCatName() + " đã được cập nhật")
-                .notiType("category_update")
-                .notiMetadata("no metadata")
-                .sendObject("all_account")
-                .build();
-        String json = new ObjectMapper().writeValueAsString(createNotification);
-        kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
-        return categoryEntity;
     }
 
     @Override
     public CategoryEntity deleteCategory(String id, Account account) {
-        UUID cat_id = UUID.fromString(id);
-        Optional<CategoryEntity> categoryEntityOptional = categoryRepository.findById(cat_id);
-        if(categoryEntityOptional.isEmpty()){
-            throw new BadRequestError("Danh mục không tồn tại");
-        }
-        CategoryEntity categoryEntity = categoryEntityOptional.get();
-        categoryEntity.setIsDeleted(1);
-        categoryEntity.setDeletedBy(AccountUtils.convertAccountToJson(account));
-        categoryEntity.setDeletedAt(new Date(System.currentTimeMillis()));
-        categoryRepository.save(categoryEntity);
-        return categoryEntity;
+       try{
+           UUID cat_id = UUID.fromString(id);
+           Optional<CategoryEntity> categoryEntityOptional = categoryRepository.findById(cat_id);
+           if(categoryEntityOptional.isEmpty()){
+               throw new BadRequestError("Danh mục không tồn tại");
+           }
+           CategoryEntity categoryEntity = categoryEntityOptional.get();
+           categoryEntity.setIsDeleted(1);
+           categoryEntity.setDeletedBy(AccountUtils.convertAccountToJson(account));
+           categoryEntity.setDeletedAt(new Date(System.currentTimeMillis()));
+           categoryRepository.save(categoryEntity);
+           // Gửi thông báo đến Kafka sau khi xóa danh mục
+           CreateNotification createNotification = CreateNotification.builder()
+                   .notiAccId(account.getAccountRestaurantId())
+                   .notiTitle("Danh mục bài viết đã được xóa")
+                   .notiContent("Danh mục bài viết: " + categoryEntity.getCatName() + " đã được xóa")
+                   .notiType("category_delete")
+                   .notiMetadata("no metadata")
+                   .sendObject("all_account")
+                   .build();
+           String json = new ObjectMapper().writeValueAsString(createNotification);
+           kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+           return categoryEntity;
+       }catch (Exception e) {
+           log.error("Error: ", e);
+           throw new RuntimeException(e);
+       }
     }
 
     @Override
     public CategoryEntity restoreCategory(String id, Account account) {
-        UUID cat_id = UUID.fromString(id);
-        Optional<CategoryEntity> categoryEntityOptional = categoryRepository.findById(cat_id);
-        if(categoryEntityOptional.isEmpty()){
-            throw new BadRequestError("Danh mục không tồn tại");
+      try{
+          UUID cat_id = UUID.fromString(id);
+          Optional<CategoryEntity> categoryEntityOptional = categoryRepository.findById(cat_id);
+          if(categoryEntityOptional.isEmpty()){
+              throw new BadRequestError("Danh mục không tồn tại");
+          }
+          CategoryEntity categoryEntity = categoryEntityOptional.get();
+          categoryEntity.setIsDeleted(0);
+          categoryEntity.setDeletedBy(null);
+          categoryEntity.setDeletedAt(null);
+          categoryRepository.save(categoryEntity);
+          // Gửi thông báo đến Kafka sau khi khôi phục danh mục
+          CreateNotification createNotification = CreateNotification.builder()
+                  .notiAccId(account.getAccountRestaurantId())
+                  .notiTitle("Danh mục bài viết đã được khôi phục")
+                  .notiContent("Danh mục bài viết: " + categoryEntity.getCatName() + " đã được khôi phục")
+                  .notiType("category_restore")
+                  .notiMetadata("no metadata")
+                  .sendObject("all_account")
+                  .build();
+          String json = new ObjectMapper().writeValueAsString(createNotification);
+          kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+          return categoryEntity;
+      }
+        catch (Exception e) {
+            log.error("Error: ", e);
+            throw new RuntimeException(e);
         }
-        CategoryEntity categoryEntity = categoryEntityOptional.get();
-        categoryEntity.setIsDeleted(0);
-        categoryEntity.setDeletedBy(null);
-        categoryEntity.setDeletedAt(null);
-        categoryRepository.save(categoryEntity);
-        // Gửi thông báo đến Kafka sau khi khôi phục danh mục
-        CreateNotification createNotification = CreateNotification.builder()
-                .notiAccId(account.getAccountRestaurantId())
-                .notiTitle("Danh mục bài viết đã được khôi phục")
-                .notiContent("Danh mục bài viết: " + categoryEntity.getCatName() + " đã được khôi phục")
-                .notiType("category_restore")
-                .notiMetadata("no metadata")
-                .sendObject("all_account")
-                .build();
-        String json = new ObjectMapper().writeValueAsString(createNotification);
-        kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
-        return categoryEntity;
     }
 
     @Override
     public CategoryEntity updateStatus(UpdateStatusCategoryDto updateStatusCategoryDto, Account account) {
-        UUID cat_id = UUID.fromString(updateStatusCategoryDto.getCatId());
-        Optional<CategoryEntity> categoryEntityOptional = categoryRepository.findById(cat_id);
-        if(categoryEntityOptional.isEmpty()){
-            throw new BadRequestError("Danh mục không tồn tại");
-        }
-        CategoryEntity categoryEntity = categoryEntityOptional.get();
-        categoryEntity.setCatStatus(updateStatusCategoryDto.getCatStatus());
-        categoryEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
-        categoryRepository.save(categoryEntity);
-        // Gửi thông báo đến Kafka sau khi cập nhật trạng thái danh mục
-        CreateNotification createNotification = CreateNotification.builder()
-                .notiAccId(account.getAccountRestaurantId())
-                .notiTitle("Trạng thái danh mục bài viết đã được cập nhật")
-                .notiContent("Danh mục bài viết: " + categoryEntity.getCatName() + " đã được cập nhật trạng thái")
-                .notiType("category_update_status")
-                .notiMetadata("no metadata")
-                .sendObject("all_account")
-                .build();
-        String json = new ObjectMapper().writeValueAsString(createNotification);
-        kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
-        return categoryEntity;
+     try{
+         UUID cat_id = UUID.fromString(updateStatusCategoryDto.getCatId());
+         Optional<CategoryEntity> categoryEntityOptional = categoryRepository.findById(cat_id);
+         if(categoryEntityOptional.isEmpty()){
+             throw new BadRequestError("Danh mục không tồn tại");
+         }
+         CategoryEntity categoryEntity = categoryEntityOptional.get();
+         categoryEntity.setCatStatus(updateStatusCategoryDto.getCatStatus());
+         categoryEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
+         categoryRepository.save(categoryEntity);
+         // Gửi thông báo đến Kafka sau khi cập nhật trạng thái danh mục
+         CreateNotification createNotification = CreateNotification.builder()
+                 .notiAccId(account.getAccountRestaurantId())
+                 .notiTitle("Trạng thái danh mục bài viết đã được cập nhật")
+                 .notiContent("Danh mục bài viết: " + categoryEntity.getCatName() + " đã được cập nhật trạng thái")
+                 .notiType("category_update_status")
+                 .notiMetadata("no metadata")
+                 .sendObject("all_account")
+                 .build();
+         String json = new ObjectMapper().writeValueAsString(createNotification);
+         kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+         return categoryEntity;
+     }catch (Exception e) {
+         log.error("Error: ", e);
+         throw new RuntimeException(e);
+     }
     }
 
     @Override
