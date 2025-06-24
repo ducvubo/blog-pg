@@ -15,7 +15,7 @@ import com.blog.blog_pg.enums.EnumStatus;
 import com.blog.blog_pg.exception.BadRequestError;
 import com.blog.blog_pg.listener.CategoryEntityListener;
 import com.blog.blog_pg.middleware.Account;
-import com.blog.blog_pg.models.CreateNotification;
+import com.blog.blog_pg.models.CreateNotificationRestaurant;
 import com.blog.blog_pg.repository.CategoryRepository;
 import com.blog.blog_pg.service.CategoryService;
 import com.blog.blog_pg.utils.AccountUtils;
@@ -152,15 +152,15 @@ public class CategoryServiceImpl implements CategoryService {
             categoryRepository.save(categoryEntity);
 
             // Gửi thông báo đến Kafka sau khi tạo danh mục
-            CreateNotification createNotification = CreateNotification.builder()
-                    .notiAccId(account.getAccountRestaurantId())
+            CreateNotificationRestaurant createNotificationRestaurant = CreateNotificationRestaurant.builder()
+                    .restaurantId(account.getAccountRestaurantId())
                     .notiTitle("Danh mục bài viết mới được tạo")
                     .notiContent("Danh mục bài viết mới: " + createCategoryDto.getCatName())
                     .notiType("category_create")
                     .notiMetadata("no metadata")
                     .sendObject("all_account")
                     .build();
-            String json = new ObjectMapper().writeValueAsString(createNotification);
+            String json = new ObjectMapper().writeValueAsString(createNotificationRestaurant);
             kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
 
             return categoryEntity;
@@ -207,15 +207,15 @@ public class CategoryServiceImpl implements CategoryService {
             categoryEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
             categoryRepository.save(categoryEntity);
             // Gửi thông báo đến Kafka sau khi cập nhật danh mục
-            CreateNotification createNotification = CreateNotification.builder()
-                    .notiAccId(account.getAccountRestaurantId())
+            CreateNotificationRestaurant createNotificationRestaurant = CreateNotificationRestaurant.builder()
+                    .restaurantId(account.getAccountRestaurantId())
                     .notiTitle("Danh mục bài viết đã được cập nhật")
                     .notiContent("Danh mục bài viết: " + updateCategoryDto.getCatName() + " đã được cập nhật")
                     .notiType("category_update")
                     .notiMetadata("no metadata")
                     .sendObject("all_account")
                     .build();
-            String json = new ObjectMapper().writeValueAsString(createNotification);
+            String json = new ObjectMapper().writeValueAsString(createNotificationRestaurant);
             kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
             return categoryEntity;
         }catch (Exception e) {
@@ -238,15 +238,15 @@ public class CategoryServiceImpl implements CategoryService {
            categoryEntity.setDeletedAt(new Date(System.currentTimeMillis()));
            categoryRepository.save(categoryEntity);
            // Gửi thông báo đến Kafka sau khi xóa danh mục
-           CreateNotification createNotification = CreateNotification.builder()
-                   .notiAccId(account.getAccountRestaurantId())
+           CreateNotificationRestaurant createNotificationRestaurant = CreateNotificationRestaurant.builder()
+                   .restaurantId(account.getAccountRestaurantId())
                    .notiTitle("Danh mục bài viết đã được xóa")
                    .notiContent("Danh mục bài viết: " + categoryEntity.getCatName() + " đã được xóa")
                    .notiType("category_delete")
                    .notiMetadata("no metadata")
                    .sendObject("all_account")
                    .build();
-           String json = new ObjectMapper().writeValueAsString(createNotification);
+           String json = new ObjectMapper().writeValueAsString(createNotificationRestaurant);
            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
            return categoryEntity;
        }catch (Exception e) {
@@ -269,15 +269,15 @@ public class CategoryServiceImpl implements CategoryService {
           categoryEntity.setDeletedAt(null);
           categoryRepository.save(categoryEntity);
           // Gửi thông báo đến Kafka sau khi khôi phục danh mục
-          CreateNotification createNotification = CreateNotification.builder()
-                  .notiAccId(account.getAccountRestaurantId())
+          CreateNotificationRestaurant createNotificationRestaurant = CreateNotificationRestaurant.builder()
+                  .restaurantId(account.getAccountRestaurantId())
                   .notiTitle("Danh mục bài viết đã được khôi phục")
                   .notiContent("Danh mục bài viết: " + categoryEntity.getCatName() + " đã được khôi phục")
                   .notiType("category_restore")
                   .notiMetadata("no metadata")
                   .sendObject("all_account")
                   .build();
-          String json = new ObjectMapper().writeValueAsString(createNotification);
+          String json = new ObjectMapper().writeValueAsString(createNotificationRestaurant);
           kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
           return categoryEntity;
       }
@@ -300,15 +300,15 @@ public class CategoryServiceImpl implements CategoryService {
          categoryEntity.setUpdatedBy(AccountUtils.convertAccountToJson(account));
          categoryRepository.save(categoryEntity);
          // Gửi thông báo đến Kafka sau khi cập nhật trạng thái danh mục
-         CreateNotification createNotification = CreateNotification.builder()
-                 .notiAccId(account.getAccountRestaurantId())
+         CreateNotificationRestaurant createNotificationRestaurant = CreateNotificationRestaurant.builder()
+                 .restaurantId(account.getAccountRestaurantId())
                  .notiTitle("Trạng thái danh mục bài viết đã được cập nhật")
                  .notiContent("Danh mục bài viết: " + categoryEntity.getCatName() + " đã được cập nhật trạng thái")
                  .notiType("category_update_status")
                  .notiMetadata("no metadata")
                  .sendObject("all_account")
                  .build();
-         String json = new ObjectMapper().writeValueAsString(createNotification);
+         String json = new ObjectMapper().writeValueAsString(createNotificationRestaurant);
          kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
          return categoryEntity;
      }catch (Exception e) {
