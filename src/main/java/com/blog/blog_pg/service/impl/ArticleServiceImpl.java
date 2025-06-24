@@ -14,6 +14,7 @@ import com.blog.blog_pg.enums.ArticleStatus;
 import com.blog.blog_pg.enums.ArticleType;
 import com.blog.blog_pg.exception.BadRequestError;
 import com.blog.blog_pg.middleware.Account;
+import com.blog.blog_pg.models.CreateNotification;
 import com.blog.blog_pg.repository.ArticleRepository;
 import com.blog.blog_pg.repository.CategoryRepository;
 import com.blog.blog_pg.service.ArticleService;
@@ -26,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.context.event.EventListener;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -59,6 +62,12 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Value("${sync.elasticsearch.enabled:false}")
     private boolean syncElasticsearchEnabled;
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+    @Autowired
+    private KafkaAdmin kafkaAdmin;
 
     public ArticleServiceImpl(RedisUtils redisUtils) {
         this.redisUtils = redisUtils;
@@ -127,7 +136,16 @@ public class ArticleServiceImpl implements ArticleService {
                     .build();
 
             articleRepository.save(articleEntity);
-
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết mới được tạo")
+                    .notiContent("Đã có một bài viết mới với tiêu đề: " + createArticleDefaultDto.getAtlTitle())
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
             return articleEntity;
         } catch (Exception e) {
             log.error("Error: ", e);
@@ -163,9 +181,18 @@ public class ArticleServiceImpl implements ArticleService {
                 .listArticleNote(createArticleVideoDto.getListArticleNote())
                 .listArticleRelated(createArticleVideoDto.getListArticleRelated())
                 .build();
-
         articleRepository.save(articleEntity);
 
+        CreateNotification createNotification = CreateNotification.builder()
+                .notiAccId(account.getAccountRestaurantId())
+                .notiTitle("Bài viết mới được tạo")
+                .notiContent("Đã có một bài viết mới với tiêu đề: " + createArticleVideoDto.getAtlTitle())
+                .notiType("article")
+                .notiMetadata("no metadata")
+                .sendObject("all_account")
+                .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
         return articleEntity;
         } catch (Exception e) {
             log.error("Error: ", e);
@@ -203,6 +230,16 @@ public class ArticleServiceImpl implements ArticleService {
 
             articleRepository.save(articleEntity);
 
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết mới được tạo")
+                    .notiContent("Đã có một bài viết mới với tiêu đề: " + createArticleDocumentDto.getAtlTitle())
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
             return articleEntity;
         } catch (Exception e) {
             log.error("Error: ", e);
@@ -241,6 +278,17 @@ public class ArticleServiceImpl implements ArticleService {
                     .build();
 
             articleRepository.save(articleEntity);
+
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết mới được tạo")
+                    .notiContent("Đã có một bài viết mới với tiêu đề: " + createArticleImage.getAtlTitle())
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
 
             return articleEntity;
         } catch (Exception e) {
@@ -300,6 +348,18 @@ public class ArticleServiceImpl implements ArticleService {
             String oldCacheKeyArticle = "read_article_" + oldSlug;
             redisUtils.deleteCacheIO(oldCacheKeyArticle);
 
+            // Gửi thông báo cập nhật bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được cập nhật")
+                    .notiContent("Bài viết với tiêu đề: " + updateArticleDefaultDto.getAtlTitle() + " đã được cập nhật.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity;
 
         } catch (Exception e) {
@@ -355,8 +415,17 @@ public class ArticleServiceImpl implements ArticleService {
             String cacheKeyArticle = "read_article_" + updateArticleVideoDto.getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
 
-            //xóa cache bài viết theo slug cũ
-            String oldCacheKeyArticle = "read_article_" + oldSlug;
+            //gửi thông báo cập nhật bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được cập nhật")
+                    .notiContent("Bài viết với tiêu đề: " + updateArticleVideoDto.getAtlTitle() + " đã được cập nhật.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
 
             return articleEntity;
 
@@ -407,6 +476,19 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + updateArticleDocumentDto.getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            //gửi thông báo cập nhật bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được cập nhật")
+                    .notiContent("Bài viết với tiêu đề: " + updateArticleDocumentDto.getAtlTitle() + " đã được cập nhật.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity;
 
         } catch (Exception e) {
@@ -463,6 +545,18 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug cũ
             String oldCacheKeyArticle = "read_article_" + oldSlug;
             redisUtils.deleteCacheIO(oldCacheKeyArticle);
+
+            //gửi thông báo cập nhật bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được cập nhật")
+                    .notiContent("Bài viết với tiêu đề: " + updateArticleImage.getAtlTitle() + " đã được cập nhật.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
             return articleEntity;
 
         } catch (Exception e) {
@@ -485,6 +579,20 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+            // Gửi thông báo gửi bài viết
+
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được gửi")
+                    .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã được gửi chờ phê duyệt.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -506,6 +614,21 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+
+            // Gửi thông báo phê duyệt bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được phê duyệt")
+                    .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã được phê duyệt và chờ xuất bản.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -527,6 +650,19 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            // Gửi thông báo từ chối bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã bị từ chối")
+                    .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã bị từ chối.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -549,6 +685,19 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            // Gửi thông báo xuất bản bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được xuất bản")
+                    .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã được xuất bản.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -575,6 +724,19 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            // Gửi thông báo xuất bản bài viết theo lịch trình
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được lên lịch xuất bản")
+                    .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã được lên lịch xuất bản vào " + scheduleTime + ".")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -597,6 +759,19 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            // Gửi thông báo hủy lịch xuất bản bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Lịch xuất bản bài viết đã bị hủy")
+                    .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã hủy lịch xuất bản.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -618,6 +793,19 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            // Gửi thông báo hủy xuất bản bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được hủy xuất bản")
+                    .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã được hủy xuất bản.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -642,6 +830,19 @@ public class ArticleServiceImpl implements ArticleService {
                 //xóa cache bài viết theo slug
                 String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
                 redisUtils.deleteCacheIO(cacheKeyArticle);
+
+                // Gửi thông báo xóa bài viết
+                CreateNotification createNotification = CreateNotification.builder()
+                        .notiAccId(account.getAccountRestaurantId())
+                        .notiTitle("Bài viết đã bị xóa")
+                        .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã bị xóa.")
+                        .notiType("article")
+                        .notiMetadata("no metadata")
+                        .sendObject("all_account")
+                        .build();
+                String json = new ObjectMapper().writeValueAsString(createNotification);
+                kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
                 return articleEntity.get();
             }else {
                 throw new BadRequestError("Article is not draft or rejected");
@@ -673,6 +874,19 @@ public class ArticleServiceImpl implements ArticleService {
             //xóa cache bài viết theo slug
             String cacheKeyArticle = "read_article_" + articleEntity.get().getAtlSlug();
             redisUtils.deleteCacheIO(cacheKeyArticle);
+
+            // Gửi thông báo khôi phục bài viết
+            CreateNotification createNotification = CreateNotification.builder()
+                    .notiAccId(account.getAccountRestaurantId())
+                    .notiTitle("Bài viết đã được khôi phục")
+                    .notiContent("Bài viết với tiêu đề: " + articleEntity.get().getAtlTitle() + " đã được khôi phục.")
+                    .notiType("article")
+                    .notiMetadata("no metadata")
+                    .sendObject("all_account")
+                    .build();
+            String json = new ObjectMapper().writeValueAsString(createNotification);
+            kafkaTemplate.send("NOTIFICATION_ACCOUNT_CREATE", json);
+
             return articleEntity.get();
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-//@Configuration
+@Configuration
 public class KafkaTopicConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
